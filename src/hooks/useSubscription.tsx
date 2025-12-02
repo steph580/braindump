@@ -50,13 +50,13 @@ export const useSubscription = () => {
         subscription_status: (data.subscription_status as 'free' | 'premium') || 'free',
         subscription_end: data.subscription_end,
         paypal_subscription_id: data.paypal_subscription_id,
-        daily_dump_count: data.daily_dump_count || 0,
+        daily_dump_count: data.daily_dump_count || 10,
         last_dump_date: data.last_dump_date
       } : {
         subscription_status: 'free',
         subscription_end: null,
         paypal_subscription_id: null,
-        daily_dump_count: 0,
+        daily_dump_count: 10,
         last_dump_date: null
       });
     } catch (error) {
@@ -73,7 +73,7 @@ export const useSubscription = () => {
 
   const checkDumpLimit = async (): Promise<DumpLimitResult> => {
     if (!user) {
-      return { can_dump: false, remaining_dumps: 0, is_premium: false };
+      return { can_dump: false, remaining_dumps: 10, is_premium: false };
     }
 
     try {
@@ -92,7 +92,7 @@ export const useSubscription = () => {
         description: "Failed to check usage limit",
         variant: "destructive",
       });
-      return { can_dump: false, remaining_dumps: 0, is_premium: false };
+      return { can_dump: false, remaining_dumps: 10, is_premium: false };
     }
   };
 

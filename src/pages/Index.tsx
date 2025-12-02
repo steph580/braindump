@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeBrainDumps } from '@/hooks/useRealtimeBrainDumps';
@@ -12,7 +11,6 @@ import { CategorySection, BrainDump } from '@/components/CategorySection';
 import { EmptyState } from '@/components/EmptyState';
 import { ProfileDialog } from '@/components/ProfileDialog';
 import { SettingsDialog } from '@/components/SettingsDialog';
-import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
 
 // Constants
 const CATEGORY_ORDER = ['task', 'reminder', 'note', 'idea'] as const;
@@ -37,7 +35,6 @@ interface ProcessedItem {
 const Index: React.FC = () => {
   // Hooks
   const { toast } = useToast();
-  const { user, signOut, loading: authLoading, isEmailVerified } = useAuth();
   const navigate = useNavigate();
   const { subscription, isPremium, checkDumpLimit } = useSubscription();
 
@@ -52,12 +49,8 @@ const Index: React.FC = () => {
 
   // Effects
   useEffect(() => {
-    if (user) {
-      initializeUserData();
-    } else {
-      clearUserData();
-    }
-  }, [user]);
+    initializeUserData();
+  }, []);
 
   // Initialization
   const initializeUserData = async (): Promise<void> => {
@@ -66,13 +59,6 @@ const Index: React.FC = () => {
       loadUserProfile(),
       loadUsageInfo(),
     ]);
-  };
-
-  const clearUserData = (): void => {
-    setBrainDumps([]);
-    setUserProfile({ display_name: null });
-    setRemainingDumps(undefined);
-    setLoading(false);
   };
 
   // Data Loading
@@ -115,9 +101,11 @@ const Index: React.FC = () => {
   };
 
   const loadUserProfile = async (): Promise<void> => {
-    if (!user) return;
-
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('profiles')
         .select('display_name')
@@ -177,16 +165,10 @@ const Index: React.FC = () => {
 
   // User Actions
   const handleSubmit = async (text: string): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     if (!user) {
-      setProfileOpen(true);
-      return;
-    }
-
-    if (!isEmailVerified) {
-      showErrorToast(
-        'Please verify your email address before creating brain dumps to prevent exploitation.',
-        'Email verification required'
-      );
+      navigate('/auth');
       return;
     }
 
@@ -201,13 +183,14 @@ const Index: React.FC = () => {
       }
 
       const processedItems = await processWithAI(text);
-      await saveBrainDumps(processedItems);
+      await saveBrainDumps(processedItems, user.id);
       
       if (!isPremium) {
-        await incrementDailyDumpCount();
+        await incrementDailyDumpCount(user.id);
       }
 
       showSuccessToast(processedItems);
+      await loadUsageInfo();
     } catch (error) {
       console.error('Error creating brain dump:', error);
       showErrorToast('Failed to process your brain dump');
@@ -216,11 +199,9 @@ const Index: React.FC = () => {
     }
   };
 
-  const saveBrainDumps = async (items: ProcessedItem[]): Promise<void> => {
-    if (!user) return;
-
+  const saveBrainDumps = async (items: ProcessedItem[], userId: string): Promise<void> => {
     const insertData = items.map(item => ({
-      user_id: user.id,
+      user_id: userId,
       text: item.refinedText,
       category: item.category,
       completed: false,
@@ -235,11 +216,9 @@ const Index: React.FC = () => {
     if (error) throw error;
   };
 
-  const incrementDailyDumpCount = async (): Promise<void> => {
-    if (!user) return;
-
+  const incrementDailyDumpCount = async (userId: string): Promise<void> => {
     await supabase.rpc('increment_daily_dump', {
-      p_user_id: user.id,
+      p_user_id: userId,
     });
   };
 
@@ -302,7 +281,7 @@ const Index: React.FC = () => {
 
   // Navigation Actions
   const handleSignOut = async (): Promise<void> => {
-    await signOut();
+    await supabase.auth.signOut();
     navigate('/auth');
   };
 
@@ -363,7 +342,7 @@ const Index: React.FC = () => {
   };
 
   // Render
-  if (authLoading || (user && loading)) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -387,15 +366,13 @@ const Index: React.FC = () => {
       />
 
       <main className="container mx-auto px-4 py-8 animate-fade-in">
-        <EmailVerificationBanner />
-
         <div className="mb-12 animate-scale-in">
           <BrainDumpInput
             onSubmit={handleSubmit}
             isProcessing={isProcessing}
             remainingDumps={remainingDumps}
             isPremium={isPremium}
-            isAuthenticated={!!user}
+            isAuthenticated={true}
           />
         </div>
 

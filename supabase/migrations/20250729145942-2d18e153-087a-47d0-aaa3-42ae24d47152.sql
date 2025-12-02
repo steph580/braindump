@@ -29,6 +29,7 @@ DECLARE
   profile_record RECORD;
   can_dump BOOLEAN := false;
   remaining_dumps INTEGER := 0;
+  MAX_FREE_DUMPS INTEGER := 10; -- Free daily limit
 BEGIN
   -- Reset daily counts if needed
   PERFORM public.reset_daily_dump_count();
@@ -42,16 +43,16 @@ BEGIN
     -- Create profile if it doesn't exist
     INSERT INTO public.profiles (user_id) VALUES (p_user_id);
     can_dump := true;
-    remaining_dumps := 1;
+    remaining_dumps := MAX_FREE_DUMPS;
   ELSIF profile_record.subscription_status = 'premium' THEN
     -- Premium users have unlimited dumps
     can_dump := true;
     remaining_dumps := -1; -- -1 indicates unlimited
   ELSIF profile_record.last_dump_date = CURRENT_DATE THEN
     -- Free user, check today's usage
-    IF profile_record.daily_dump_count < 1 THEN
+    IF profile_record.daily_dump_count < MAX_FREE_DUMPS THEN
       can_dump := true;
-      remaining_dumps := 1 - profile_record.daily_dump_count;
+      remaining_dumps := MAX_FREE_DUMPS - profile_record.daily_dump_count;
     ELSE
       can_dump := false;
       remaining_dumps := 0;
@@ -59,7 +60,7 @@ BEGIN
   ELSE
     -- Free user, new day
     can_dump := true;
-    remaining_dumps := 1;
+    remaining_dumps := MAX_FREE_DUMPS;
   END IF;
   
   -- If can dump, increment counter
