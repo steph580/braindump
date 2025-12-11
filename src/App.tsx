@@ -9,7 +9,8 @@ import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 
 import Landing from "@/pages/Landing";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+import Signup from "./pages/Signup";
+import Login from "./pages/Login";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 
@@ -29,7 +30,7 @@ const ProtectedRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
 
   if (!user) {
     // Redirect unauthenticated users to the login page
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;
@@ -50,7 +51,8 @@ const App: React.FC = () => {
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
-              <Route path="/auth" element={<Auth />} />
+			  <Route path="/login" element={<Login />} />
+			  <Route path="/signup" element={<Signup />} />
 
               {/* Protected routes */}
               <Route

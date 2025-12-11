@@ -35,14 +35,11 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (user && open) {
-      loadProfile();
-    }
+    if (user && open) loadProfile();
   }, [user, open]);
 
   const loadProfile = async () => {
     if (!user) return;
-    
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -51,9 +48,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
         .eq('user_id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
+      if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
         setProfile(data);
@@ -61,11 +56,7 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load profile",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to load profile", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +64,6 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
 
   const saveProfile = async () => {
     if (!user) return;
-    
     setIsSaving(true);
     try {
       const { error } = await supabase
@@ -82,21 +72,13 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
           user_id: user.id,
           display_name: displayName || null,
         });
-
       if (error) throw error;
 
       setProfile(prev => ({ ...prev, display_name: displayName || null }));
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been saved successfully",
-      });
+      toast({ title: "Profile updated", description: "Your profile has been saved successfully" });
     } catch (error) {
       console.error('Error saving profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save profile",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to save profile", variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -107,22 +89,11 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
   const handleUpgrade = async () => {
     try {
       const approvalUrl = await createPayPalSubscription();
-      if (approvalUrl) {
-        window.location.href = approvalUrl;
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to create subscription. Please try again.",
-          variant: "destructive",
-        });
-      }
+      if (approvalUrl) window.location.href = approvalUrl;
+      else toast({ title: "Error", description: "Failed to create subscription.", variant: "destructive" });
     } catch (error) {
       console.error('Error starting subscription:', error);
-      toast({
-        title: "Error", 
-        description: "Failed to start subscription process",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to start subscription process", variant: "destructive" });
     }
   };
 
@@ -131,36 +102,35 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
       <DialogContent className="sm:max-w-md max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            {user ? 'Profile' : 'Welcome'}
+            <User className="h-5 w-5" /> {user ? 'Profile' : 'Welcome'}
           </DialogTitle>
         </DialogHeader>
-        
+
         <ScrollArea className="max-h-[70vh]">
           <div className="space-y-6 pr-4">
             {user ? (
               <>
-                {/* User Info Section */}
+                {/* Avatar & User Info */}
                 <div className="text-center space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto">
-                    <User className="h-10 w-10 text-white" />
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto">
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="h-10 w-10 text-white" />
+                    )}
                   </div>
-                  
+
                   <div>
-                    <h3 className="text-lg font-semibold">
-                      {profile.display_name || 'Anonymous User'}
-                    </h3>
+                    <h3 className="text-lg font-semibold">{profile.display_name || 'Anonymous User'}</h3>
                     <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="h-3 w-3" />
-                      {user?.email}
+                      <Mail className="h-3 w-3" /> {user.email}
                     </div>
                   </div>
 
                   <div className="flex justify-center gap-2">
                     {isPremium ? (
-                      <Badge className="bg-gradient-to-r from-accent to-category-idea text-white">
-                        <Crown className="h-3 w-3 mr-1" />
-                        Premium
+                      <Badge className="bg-gradient-to-r from-accent to-category-idea text-white flex items-center gap-1">
+                        <Crown className="h-3 w-3" /> Premium
                       </Badge>
                     ) : (
                       <Badge variant="secondary">Free Plan</Badge>
@@ -170,24 +140,19 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
 
                 <Separator />
 
-                {/* Profile Edit Section */}
+                {/* Edit Display Name */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="displayName">Display Name</Label>
                     <Input
                       id="displayName"
                       value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      onChange={e => setDisplayName(e.target.value)}
                       placeholder="Enter your display name"
                       disabled={isLoading || isSaving}
                     />
                   </div>
-
-                  <Button 
-                    onClick={saveProfile} 
-                    disabled={isSaving || isLoading}
-                    className="w-full"
-                  >
+                  <Button onClick={saveProfile} disabled={isSaving || isLoading} className="w-full">
                     {isSaving ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>
@@ -199,11 +164,9 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Member since</span>
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {memberSince}
+                      <Calendar className="h-3 w-3" /> {memberSince}
                     </div>
                   </div>
-                  
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Account type</span>
                     <span>{isPremium ? 'Premium' : 'Free'}</span>
@@ -212,9 +175,11 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
 
                 {!isPremium && (
                   <div className="space-y-2">
-                    <Button onClick={handleUpgrade} className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90">
-                      <Crown className="h-4 w-4 mr-2" />
-                      Upgrade to Premium - $8/month
+                    <Button
+                      onClick={handleUpgrade}
+                      className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 flex items-center justify-center gap-2"
+                    >
+                      <Crown className="h-4 w-4" /> Upgrade to Premium - $8/month
                     </Button>
                     <p className="text-xs text-muted-foreground text-center">
                       Get unlimited brain dumps every day
@@ -225,38 +190,28 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
                 <Separator />
 
                 {/* Sign Out */}
-                <div className="space-y-2">
-                  <Button 
-                    onClick={() => {
-                      if (onSignOut) onSignOut();
-                      onOpenChange(false);
-                    }}
-                    variant="outline" 
-                    className="w-full text-destructive border-destructive/20 hover:bg-destructive/10"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => {
+                    if (onSignOut) onSignOut();
+                    onOpenChange(false);
+                  }}
+                  variant="outline"
+                  className="w-full text-destructive border-destructive/20 hover:bg-destructive/10 flex items-center justify-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </Button>
               </>
             ) : (
-              /* Authentication buttons for non-authenticated users */
+              /* Non-authenticated users */
               <div className="space-y-4 text-center">
                 <p className="text-muted-foreground">
                   Sign in to start creating brain dumps and unlock premium features
                 </p>
                 <div className="space-y-3">
-                  <Button 
-                    onClick={() => navigate('/auth')}
-                    className="w-full"
-                  >
+                  <Button onClick={() => navigate('/auth')} className="w-full">
                     Sign In
                   </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate('/auth')}
-                    className="w-full"
-                  >
+                  <Button variant="outline" onClick={() => navigate('/auth')} className="w-full">
                     Create Account
                   </Button>
                 </div>

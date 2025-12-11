@@ -12,7 +12,7 @@ const AuthRedirectHandler = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN") {
-        navigate("/", { replace: true });
+        navigate("/home", { replace: true });
       }
     });
     return () => subscription.unsubscribe();
@@ -51,7 +51,7 @@ const AuthRedirectHandler = () => {
   // If already logged in and on /auth, send to home
   useEffect(() => {
     if (user && location.pathname === "/auth") {
-      navigate("/", { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [user, location.pathname, navigate]);
 

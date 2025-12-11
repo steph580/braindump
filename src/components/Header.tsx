@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   onProfileClick,
   onSettingsClick 
 }) => {
-  const maxDumps = isPremium ? Infinity : 1;
+  const maxDumps = isPremium ? Infinity : 10;
   
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-xl shadow-sm">

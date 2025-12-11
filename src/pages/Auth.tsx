@@ -31,7 +31,6 @@ const BUTTON_TEXT = {
   SIGN_UP: 'Sign Up',
 } as const;
 
-// Types
 type AuthTab = typeof AUTH_TABS[keyof typeof AUTH_TABS];
 
 interface FormState {
@@ -44,25 +43,10 @@ interface AuthError {
   message: string;
 }
 
-/**
- * Auth Component
- * 
- * Handles user authentication with sign-in and sign-up functionality.
- * Features include:
- * - Dual-tab interface for sign-in/sign-up
- * - Form validation
- * - Error handling with user feedback
- * - Automatic redirect for authenticated users
- * - Email verification flow
- * 
- * @component
- */
 const Auth: React.FC = () => {
-  // Hooks
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
-  // State
   const [formState, setFormState] = useState<FormState>({
     email: '',
     password: '',
@@ -70,52 +54,39 @@ const Auth: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Redirect authenticated users
   useEffect(() => {
-  if (!loading && user) {
-    navigate('/home', { replace: true });
-  }
- }, [user, loading, navigate]);
-  /**
-   * Form field handlers
-   */
+    if (!loading && user) {
+      navigate('/home', { replace: true });
+    }
+  }, [user, loading, navigate]);
+
   const handleEmailChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>): void => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormState(prev => ({ ...prev, email: e.target.value }));
-      if (error) setError('');
+      setError('');
     },
-    [error]
+    []
   );
 
   const handlePasswordChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>): void => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormState(prev => ({ ...prev, password: e.target.value }));
-      if (error) setError('');
+      setError('');
     },
-    [error]
+    []
   );
 
   const handleDisplayNameChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>): void => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormState(prev => ({ ...prev, displayName: e.target.value }));
-      if (error) setError('');
+      setError('');
     },
-    [error]
+    []
   );
 
-  /**
-   * Resets form state
-   */
-  const resetFormState = useCallback((): void => {
-    setError('');
-    setLoading(false);
-  }, []);
-
-  /**
-   * Handles authentication errors
-   */
-  const handleAuthError = useCallback((authError: AuthError, title: string): void => {
+  const handleAuthError = useCallback((authError: AuthError, title: string) => {
     setError(authError.message);
     toast({
       title,
@@ -124,32 +95,23 @@ const Auth: React.FC = () => {
     });
   }, []);
 
-  /**
-   * Handles successful sign-in
-   */
-  const handleSignInSuccess = useCallback((): void => {
+  const handleSignInSuccess = useCallback(() => {
     toast({
       title: 'Welcome back!',
-      description: 'Successfully signed in to your account.',
+      description: 'Successfully signed in.',
     });
     navigate('/home');
   }, [navigate]);
 
-  /**
-   * Handles successful sign-up
-   */
-  const handleSignUpSuccess = useCallback((): void => {
+  const handleSignUpSuccess = useCallback(() => {
     toast({
-      title: 'Account created successfully',
-      description: 'Please check your email to verify your account.',
+      title: 'Account created',
+      description: 'Verify your email to continue.',
     });
   }, []);
 
-  /**
-   * Sign-in form submission handler
-   */
   const handleSignIn = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       setLoading(true);
       setError('');
@@ -161,26 +123,26 @@ const Auth: React.FC = () => {
         );
 
         if (signInError) {
-          handleAuthError(signInError, 'Sign in failed, please try again');
+          handleAuthError(signInError, 'Sign-in failed');
         } else {
           handleSignInSuccess();
         }
-      } catch (err) {
-        console.error('Sign in error:', err);
-        setError('An unexpected error occurred');
       } finally {
         setLoading(false);
       }
     },
-    [formState.email, formState.password, signIn, handleAuthError, handleSignInSuccess]
+    [formState.email, formState.password, signIn]
   );
 
-  /**
-   * Sign-up form submission handler
-   */
   const handleSignUp = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+
+      if (!acceptedTerms) {
+        setError('You must accept the Terms & Conditions to continue.');
+        return;
+      }
+
       setLoading(true);
       setError('');
 
@@ -192,44 +154,30 @@ const Auth: React.FC = () => {
         );
 
         if (signUpError) {
-          handleAuthError(signUpError, 'Sign up failed');
+          handleAuthError(signUpError, 'Sign-up failed');
         } else {
           handleSignUpSuccess();
         }
-      } catch (err) {
-        console.error('Sign up error:', err);
-        setError('An unexpected error occurred');
       } finally {
         setLoading(false);
       }
     },
-    [
-      formState.email,
-      formState.password,
-      formState.displayName,
-      signUp,
-      handleAuthError,
-      handleSignUpSuccess,
-    ]
+    [formState.email, formState.password, formState.displayName, acceptedTerms]
   );
 
-  // Early return for authenticated users
-  if (user) {
-    return null;
-  }
+  if (user) return null;
 
-  // Render helpers
-  const renderFormField = (
+  const renderField = (
     id: string,
     label: string,
     type: string,
     placeholder: string,
     value: string,
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
-    required: boolean = false
-  ): React.ReactNode => (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+    required = false
+  ) => (
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-xs">{label}</Label>
       <Input
         id={id}
         type={type}
@@ -238,122 +186,78 @@ const Auth: React.FC = () => {
         onChange={onChange}
         required={required}
         disabled={loading}
-        aria-invalid={!!error}
-        aria-describedby={error ? 'auth-error' : undefined}
+        className="text-sm"
       />
     </div>
   );
 
-  const renderErrorAlert = (): React.ReactNode => {
-    if (!error) return null;
-
-    return (
-      <Alert variant="destructive" id="auth-error" role="alert">
-        <AlertDescription>{error}</AlertDescription>
+  const renderError = () =>
+    error ? (
+      <Alert variant="destructive">
+        <AlertDescription className="text-xs">{error}</AlertDescription>
       </Alert>
-    );
-  };
+    ) : null;
 
-  const renderSignInForm = (): React.ReactNode => (
-    <TabsContent value={AUTH_TABS.SIGN_IN} className="space-y-4">
-      <form onSubmit={handleSignIn} className="space-y-4" noValidate>
-        {renderFormField(
-          'signin-email',
-          'Email',
-          'email',
-          'Enter your email',
-          formState.email,
-          handleEmailChange,
-          true
-        )}
-        {renderFormField(
-          'signin-password',
-          'Password',
-          'password',
-          'Enter your password',
-          formState.password,
-          handlePasswordChange,
-          true
-        )}
-        {renderErrorAlert()}
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={loading}
-          aria-busy={loading}
-        >
-          {loading ? LOADING_TEXT.SIGN_IN : BUTTON_TEXT.SIGN_IN}
-        </Button>
-      </form>
-    </TabsContent>
-  );
-
-  const renderSignUpForm = (): React.ReactNode => (
-    <TabsContent value={AUTH_TABS.SIGN_UP} className="space-y-4">
-      <form onSubmit={handleSignUp} className="space-y-4" noValidate>
-        {renderFormField(
-          'signup-name',
-          'Display Name',
-          'text',
-          'Enter your display name',
-          formState.displayName,
-          handleDisplayNameChange,
-          false
-        )}
-        {renderFormField(
-          'signup-email',
-          'Email',
-          'email',
-          'Enter your email',
-          formState.email,
-          handleEmailChange,
-          true
-        )}
-        {renderFormField(
-          'signup-password',
-          'Password',
-          'password',
-          'Create a password',
-          formState.password,
-          handlePasswordChange,
-          true
-        )}
-        {renderErrorAlert()}
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={loading}
-          aria-busy={loading}
-        >
-          {loading ? LOADING_TEXT.SIGN_UP : BUTTON_TEXT.SIGN_UP}
-        </Button>
-      </form>
-    </TabsContent>
-  );
-
-  // Main render
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-md rounded-xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">BrainDump</CardTitle>
-          <CardDescription>
-            Capture your thoughts and organize your mind
+          <CardTitle className="text-xl font-semibold">BrainDump</CardTitle>
+          <CardDescription className="text-xs">
+            Capture your thoughts. Organize your mind.
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           <Tabs defaultValue={AUTH_TABS.SIGN_IN} className="w-full">
-            <TabsList className="grid w-full grid-cols-2" role="tablist">
-              <TabsTrigger value={AUTH_TABS.SIGN_IN} aria-label="Sign in tab">
-                Sign In
-              </TabsTrigger>
-              <TabsTrigger value={AUTH_TABS.SIGN_UP} aria-label="Sign up tab">
-                Sign Up
-              </TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 text-sm">
+              <TabsTrigger value={AUTH_TABS.SIGN_IN}>Sign In</TabsTrigger>
+              <TabsTrigger value={AUTH_TABS.SIGN_UP}>Sign Up</TabsTrigger>
             </TabsList>
 
-            {renderSignInForm()}
-            {renderSignUpForm()}
+            {/* SIGN IN */}
+            <TabsContent value={AUTH_TABS.SIGN_IN} className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-4 text-sm">
+                {renderField('email', 'Email', 'email', 'Enter your email', formState.email, handleEmailChange, true)}
+                {renderField('password', 'Password', 'password', 'Enter your password', formState.password, handlePasswordChange, true)}
+                {renderError()}
+
+                <Button type="submit" className="w-full text-sm py-2" disabled={loading}>
+                  {loading ? LOADING_TEXT.SIGN_IN : BUTTON_TEXT.SIGN_IN}
+                </Button>
+              </form>
+            </TabsContent>
+
+            {/* SIGN UP */}
+            <TabsContent value={AUTH_TABS.SIGN_UP} className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4 text-sm">
+                {renderField('name', 'Display Name', 'text', 'Your name', formState.displayName, handleDisplayNameChange)}
+                {renderField('email2', 'Email', 'email', 'Enter your email', formState.email, handleEmailChange, true)}
+                {renderField('password2', 'Password', 'password', 'Create a password', formState.password, handlePasswordChange, true)}
+
+                {/* TERMS */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    className="h-3 w-3"
+                    checked={acceptedTerms}
+                    onChange={e => setAcceptedTerms(e.target.checked)}
+                  />
+                  <Label htmlFor="terms" className="text-xs">
+                    I agree to the{' '}
+                    <span className="underline cursor-pointer">Terms & Conditions</span> and{' '}
+                    <span className="underline cursor-pointer">Privacy Policy</span>.
+                  </Label>
+                </div>
+
+                {renderError()}
+
+                <Button type="submit" className="w-full text-sm py-2" disabled={loading}>
+                  {loading ? LOADING_TEXT.SIGN_UP : BUTTON_TEXT.SIGN_UP}
+                </Button>
+              </form>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
