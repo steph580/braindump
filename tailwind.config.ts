@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
 	darkMode: ["class"],
@@ -70,6 +71,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				vault: {
+					glow: 'hsl(var(--vault-glow))',
+					success: 'hsl(var(--vault-success))',
+					warning: 'hsl(var(--vault-warning))',
+					danger: 'hsl(var(--vault-danger))',
+					glass: 'hsl(var(--vault-glass))',
 				}
 			},
 			borderRadius: {
@@ -155,5 +163,5 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [tailwindcssAnimate],
 } satisfies Config;

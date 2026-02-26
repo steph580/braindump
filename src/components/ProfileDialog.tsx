@@ -167,38 +167,47 @@ export const ProfileDialog: React.FC<ProfileDialogProps> = ({ open, onOpenChange
                       <Calendar className="h-3 w-3" /> {memberSince}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Account type</span>
-                    <span>{isPremium ? 'Premium' : 'Free'}</span>
-                  </div>
                 </div>
 
+                <Separator />
+
+                {/* Subscription Section */}
                 {!isPremium && (
-                  <div className="space-y-2">
-                    <Button
-                      onClick={handleUpgrade}
-                      className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 flex items-center justify-center gap-2"
-                    >
-                      <Crown className="h-4 w-4" /> Upgrade to Premium - $8/month
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Get unlimited brain dumps every day
-                    </p>
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-start gap-3">
+                      <Crown className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                          Upgrade to Premium
+                        </h4>
+                        <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
+                          Get unlimited brain dumps, priority support, and advanced analytics.
+                        </p>
+                        <Button
+                          onClick={handleUpgrade}
+                          disabled={isLoading}
+                          className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                        >
+                          {isLoading ? 'Processing...' : 'Upgrade Now - $8/month'}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 <Separator />
 
-                {/* Sign Out */}
+                {/* Sign Out Button */}
                 <Button
                   onClick={() => {
                     if (onSignOut) onSignOut();
                     onOpenChange(false);
                   }}
                   variant="outline"
-                  className="w-full text-destructive border-destructive/20 hover:bg-destructive/10 flex items-center justify-center gap-2"
+                  className="w-full text-destructive border-destructive/20 hover:bg-destructive/10"
                 >
-                  <LogOut className="h-4 w-4" /> Sign Out
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
                 </Button>
               </>
             ) : (

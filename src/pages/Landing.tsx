@@ -42,7 +42,7 @@ const PRICING_TIERS = [
     price: '$0',
     period: 'forever',
     features: [
-      '1 brain dump per day',
+      '10 brain dumps per day',
       'AI categorization',
       'Basic organization',
       'Mobile & desktop access',

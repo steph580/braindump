@@ -1,17 +1,17 @@
-// Supabase client configuration with proper environment variable handling --copyright
+// Supabase client configuration with proper environment variable handling
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Use Vite environment variables with fallback for development --copyright
+// Use Vite environment variables with fallback for development
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Validate environment variables in development --copyright
+// Validate environment variables in development
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.warn('⚠️ Supabase credentials not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file --copyright');
+  console.warn('⚠️ Supabase credentials not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file');
 }
 
-// Create Supabase client with optimized configuration --copyright
+// Create Supabase client with optimized configuration
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,

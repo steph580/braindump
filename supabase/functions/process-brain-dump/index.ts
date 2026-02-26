@@ -79,7 +79,7 @@ Return ONLY valid JSON with "items" array, no other text.`
     let processedData: ProcessResponse;
     try {
       // Remove markdown code blocks
-      let cleanContent = content.trim().replace(/^```(json)?\s*/, '').replace(/\s*```$/, '');
+      const cleanContent = content.trim().replace(/^```(json)?\s*/, '').replace(/\s*```$/, '');
       processedData = JSON.parse(cleanContent);
     } catch {
       processedData = { items: [{ category: 'note', refinedText: text, priority: 'medium' }] };

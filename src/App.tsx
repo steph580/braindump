@@ -13,6 +13,11 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
+import { ProfilePage } from "@/pages/ProfilePage";
+import { SettingsPage } from "@/pages/SettingsPage";
+import { AnalyticsPage } from "@/pages/AnalyticsPage";
+import { DumpsPage } from "@/pages/DumpsPage";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 // Initialize React Query client
 const queryClient = new QueryClient();
@@ -68,6 +73,64 @@ const App: React.FC = () => {
                 element={
                   <ProtectedRoute>
                     <PaymentSuccess />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Dashboard routes with layout */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <div className="p-6">
+                        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
+                          <ProfilePage />
+                        </div>
+                      </div>
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <div className="p-6">
+                        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
+                          <SettingsPage />
+                        </div>
+                      </div>
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <div className="p-6">
+                        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
+                          <AnalyticsPage />
+                        </div>
+                      </div>
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dumps"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <div className="p-6">
+                        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
+                          <DumpsPage />
+                        </div>
+                      </div>
+                    </DashboardLayout>
                   </ProtectedRoute>
                 }
               />

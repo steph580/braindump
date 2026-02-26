@@ -1,16 +1,9 @@
--- Add subscription fields to profiles table
-ALTER TABLE public.profiles 
-ADD COLUMN subscription_status TEXT DEFAULT 'free' CHECK (subscription_status IN ('free', 'premium')),
-ADD COLUMN subscription_end TIMESTAMPTZ,
-ADD COLUMN paypal_subscription_id TEXT,
-ADD COLUMN last_dump_date DATE,
-ADD COLUMN daily_dump_count INTEGER DEFAULT 0;
-
--- Create function to reset daily dump count
+-- Function to reset daily dump count
 CREATE OR REPLACE FUNCTION public.reset_daily_dump_count()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = 'public'
 AS $$
 BEGIN
   UPDATE public.profiles 
@@ -19,17 +12,18 @@ BEGIN
 END;
 $$;
 
--- Create function to check and increment daily dump usage
+-- Function to check and get daily limit status
 CREATE OR REPLACE FUNCTION public.check_daily_limit(p_user_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = 'public'
 AS $$
 DECLARE
   profile_record RECORD;
   can_dump BOOLEAN := false;
   remaining_dumps INTEGER := 0;
-  MAX_FREE_DUMPS INTEGER := 10; -- Free daily limit
+  MAX_FREE_DUMPS INTEGER := 10;
 BEGIN
   -- Reset daily counts if needed
   PERFORM public.reset_daily_dump_count();
@@ -41,13 +35,14 @@ BEGIN
   
   IF NOT FOUND THEN
     -- Create profile if it doesn't exist
-    INSERT INTO public.profiles (user_id) VALUES (p_user_id);
+    INSERT INTO public.profiles (user_id, daily_dump_count, last_dump_date) 
+    VALUES (p_user_id, 0, NULL);
     can_dump := true;
     remaining_dumps := MAX_FREE_DUMPS;
   ELSIF profile_record.subscription_status = 'premium' THEN
     -- Premium users have unlimited dumps
     can_dump := true;
-    remaining_dumps := -1; -- -1 indicates unlimited
+    remaining_dumps := -1;
   ELSIF profile_record.last_dump_date = CURRENT_DATE THEN
     -- Free user, check today's usage
     IF profile_record.daily_dump_count < MAX_FREE_DUMPS THEN
@@ -63,21 +58,24 @@ BEGIN
     remaining_dumps := MAX_FREE_DUMPS;
   END IF;
   
-  -- If can dump, increment counter
-  IF can_dump AND remaining_dumps != -1 THEN
-    UPDATE public.profiles 
-    SET daily_dump_count = CASE 
-      WHEN last_dump_date = CURRENT_DATE THEN daily_dump_count + 1
-      ELSE 1
-    END,
-    last_dump_date = CURRENT_DATE
-    WHERE user_id = p_user_id;
-  END IF;
-  
   RETURN jsonb_build_object(
     'can_dump', can_dump,
-    'remaining_dumps', remaining_dumps,
-    'is_premium', profile_record.subscription_status = 'premium'
+    'remaining_dumps', remaining_dumps
   );
+END;
+$$;
+
+-- Function to increment daily dump usage
+CREATE OR REPLACE FUNCTION public.increment_daily_dump(p_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
+BEGIN
+  UPDATE public.profiles 
+  SET daily_dump_count = daily_dump_count + 1, 
+      last_dump_date = CURRENT_DATE
+  WHERE user_id = p_user_id;
 END;
 $$;

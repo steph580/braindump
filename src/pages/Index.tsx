@@ -11,6 +11,7 @@ import { CategorySection, BrainDump } from '@/components/CategorySection';
 import { EmptyState } from '@/components/EmptyState';
 import { ProfileDialog } from '@/components/ProfileDialog';
 import { SettingsDialog } from '@/components/SettingsDialog';
+import { DashboardLayout } from '@/components/DashboardLayout';
 
 // Constants
 const CATEGORY_ORDER = ['task', 'reminder', 'note', 'idea'] as const;
@@ -307,7 +308,7 @@ const Index: React.FC = () => {
       title: 'Daily limit reached',
       description: isPremium
         ? 'Something went wrong checking your premium status'
-        : 'Free users can create 1 brain dump per day. Upgrade to Premium for unlimited dumps!',
+        : 'Free users can create 10 brain dumps per day. Upgrade to Premium for unlimited dumps!',
       variant: 'destructive',
     });
   };
@@ -334,7 +335,7 @@ const Index: React.FC = () => {
     const sortedCategories = [
       ...CATEGORY_ORDER.filter(cat => groupedDumps[cat]?.length > 0),
       ...allCategories.filter(
-        cat => !CATEGORY_ORDER.includes(cat as any) && groupedDumps[cat]?.length > 0
+        cat => !CATEGORY_ORDER.includes(cat as typeof CATEGORY_ORDER[number]) && groupedDumps[cat]?.length > 0
       ),
     ];
 
@@ -355,47 +356,63 @@ const Index: React.FC = () => {
   const { groupedDumps, sortedCategories } = getCategorizedDumps();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary-light/20 to-background">
-      <Header
-        dumpsCount={brainDumps.length}
-        isPremium={isPremium}
-        displayName={userProfile.display_name}
-        onSignOut={handleSignOut}
-        onProfileClick={handleProfileClick}
-        onSettingsClick={handleSettingsClick}
-      />
-
-      <main className="container mx-auto px-4 py-8 animate-fade-in">
-        <div className="mb-12 animate-scale-in">
-          <BrainDumpInput
-            onSubmit={handleSubmit}
-            isProcessing={isProcessing}
-            remainingDumps={remainingDumps}
-            isPremium={isPremium}
-            isAuthenticated={true}
-          />
+    <DashboardLayout
+      onProfileClick={handleProfileClick}
+      onSettingsClick={handleSettingsClick}
+      remainingDumps={remainingDumps}
+      isPremium={isPremium}
+    >
+      <div className="flex flex-col h-full">
+        {/* Top Bar */}
+        <div className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Brain Dump Dashboard</h1>
+            <p className="text-sm text-slate-500 mt-1">
+              You have <span className="font-semibold text-slate-700">{brainDumps.length}</span> brain dumps
+            </p>
+          </div>
+          {isPremium && (
+            <div className="px-4 py-2 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg border border-amber-200">
+              <p className="text-sm font-semibold text-amber-900">Premium Member</p>
+            </div>
+          )}
         </div>
 
-        {brainDumps.length === 0 ? (
-          <div className="animate-fade-in">
-            <EmptyState />
-          </div>
-        ) : (
-          <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
-            {sortedCategories.map(category => (
-              <CategorySection
-                key={category}
-                title={category.charAt(0).toUpperCase() + category.slice(1)}
-                category={category}
-                dumps={groupedDumps[category]}
-                onToggleComplete={handleToggleComplete}
-                onDelete={handleDelete}
-                onEdit={handleEdit}
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto">
+          <main className="container mx-auto px-8 py-8">
+            <div className="mb-12 animate-scale-in">
+              <BrainDumpInput
+                onSubmit={handleSubmit}
+                isProcessing={isProcessing}
+                remainingDumps={remainingDumps}
+                isPremium={isPremium}
+                isAuthenticated={true}
               />
-            ))}
-          </div>
-        )}
-      </main>
+            </div>
+
+            {brainDumps.length === 0 ? (
+              <div className="animate-fade-in">
+                <EmptyState />
+              </div>
+            ) : (
+              <div className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+                {sortedCategories.map(category => (
+                  <CategorySection
+                    key={category}
+                    title={category.charAt(0).toUpperCase() + category.slice(1)}
+                    category={category}
+                    dumps={groupedDumps[category]}
+                    onToggleComplete={handleToggleComplete}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                  />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
 
       <ProfileDialog
         open={profileOpen}
@@ -403,7 +420,7 @@ const Index: React.FC = () => {
         onSignOut={handleSignOut}
       />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-    </div>
+    </DashboardLayout>
   );
 };
 

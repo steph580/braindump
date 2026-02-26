@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 // Logging helper
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   console.log(`[CREATE-PAYPAL-SUBSCRIPTION] ${step}${details ? ` - ${JSON.stringify(details)}` : ''}`);
 };
 
@@ -165,7 +165,7 @@ serve(async (req) => {
     const subscription = await subscriptionResponse.json();
     logStep("Subscription created", { subscriptionId: subscription.id });
 
-    const approvalLink = subscription.links.find((link: any) => link.rel === "approve");
+    const approvalLink = subscription.links.find((link: { rel: string }) => link.rel === "approve");
     if (!approvalLink) throw new Error("No approval link found");
 
     // Store subscription in Supabase
